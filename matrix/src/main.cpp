@@ -1,3 +1,14 @@
+
+
+#include <netconfig.hpp> 
+/*
+netconfig.hpp is simply:
+#define WIFI_SSID "ssid"
+
+#define WIFI_PWD "pwd"
+
+*/
+
 #include <Arduino.h>
 #include <matrix.hpp>
 #include <network/networkmanager.hpp>
@@ -10,7 +21,7 @@ sudo systemctl start avahi-daemon
 
 */
 CMatrix matrix = CMatrix(matrix_pin_t()); 
-CNetworkManager NetworkManager("matrix", "BELL004", "324A153EF11F");
+CNetworkManager NetworkManager("matrix", WIFI_SSID, WIFI_PWD);
 
 CClock Clock;
 
