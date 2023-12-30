@@ -37,7 +37,7 @@ void setup () {
   }
   Clock.Init();
   matrix.printf("%s @ %s / %s.local", NetworkManager.GetSSID(), NetworkManager.GetIP().c_str(), NetworkManager.GetHost());
-
+  
 }
 
 

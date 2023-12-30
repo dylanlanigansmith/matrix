@@ -48,7 +48,7 @@ private:
     }
     void UpdateTimeStr(){
         
-        snprintf(m_timebuf, TIMEBUF_SIZE, "%i:%i:%i", m_timeinfo.tm_hour, m_timeinfo.tm_min, m_timeinfo.tm_sec);
+        snprintf(m_timebuf, TIMEBUF_SIZE, "%02i:%02i:%02i", m_timeinfo.tm_hour, m_timeinfo.tm_min, m_timeinfo.tm_sec);
 
         
     }
