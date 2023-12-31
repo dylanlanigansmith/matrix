@@ -45,7 +45,7 @@ uint8_t CNetworkManager::Connect(int32_t timeout)
             return (WiFi.status() == WL_CONNECT_FAILED) ? WIFI_FAIL : WIFI_TIMEOUT;
         }
     }
-
+    matrix.staticf("%s", GetIP().c_str());
     if (!MDNS.begin(hostname)){
         return MDNS_FAIL;
     }
