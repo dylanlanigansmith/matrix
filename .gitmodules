@@ -1,0 +1,3 @@
+[submodule "matrix/lib/spotify-api-arduino"]
+	path = matrix/lib/spotify-api-arduino
+	url = https://github.com/witnessmenow/spotify-api-arduino.git
