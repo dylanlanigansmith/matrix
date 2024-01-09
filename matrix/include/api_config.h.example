@@ -1,0 +1,16 @@
+//example here because I will accidentally upload my API keys to github if I do it any other way
+
+#define WIFI_SSID "pretty fly for a wifi"
+
+#define WIFI_PWD "1234"
+
+
+
+#define SPOTIFY_CLIENT "xxx"
+#define SPOTIFY_SECRET "xxx"
+//get this from the browser ESP auth 
+//see spotify for esp32 lib docs
+#define SPOTIFY_REFRESH "xxxx"
+
+//https://newsapi.org/
+#define NEWSAPI_KEY "xxxx"
