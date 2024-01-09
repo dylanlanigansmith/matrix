@@ -1,6 +1,6 @@
 #pragma once
 #include <include.hpp>
-#include <cstdarg>
+
 
 #define MATRIX_WIDTH 96
 #define MATRIX_HEIGHT 8
@@ -22,6 +22,8 @@ struct matrix_pin_t
     }
 };
 
+
+using scrollspeed = std::pair<uint32_t, uint8_t>;
 class CMatrix
 {
 public:
@@ -36,10 +38,21 @@ public:
     void ScrollText(const char* disp);
     void printf(const char* fmt, ...);
     void staticf(const char* fmt, ...);
+
+    void displayf(const char* fmt, ...);
     void StaticText(const char* disp);
     inline bool HasInit() const { return m_is_init; }
 
     int GetTextWidth(const char* disp);
+
+    inline bool TextFits(const char* disp) {
+        return GetTextWidth(disp) < MATRIX_WIDTH; //inconsistent
+    }
+
+    inline void SetNextSpeed(const scrollspeed& next) { m_nextSpeed = next; m_overrideSpeed = true;}
+    inline void ResetSpeed() { m_nextSpeed = m_speed; m_overrideSpeed = false; }
+
+    void SetBrightness(float amt);
 private:
     
 
@@ -47,6 +60,10 @@ private:
 private:
     const matrix_pin_t m_pins;
     bool m_is_init;
+
+    scrollspeed m_speed;
+    scrollspeed m_nextSpeed;
+    bool m_overrideSpeed;
 };
 
 extern CMatrix matrix;

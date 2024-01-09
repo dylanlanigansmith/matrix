@@ -1,5 +1,7 @@
+#pragma once
 #include <include.hpp>
 #include <ESPAsyncWebServer.h>
+#include <WiFiClientSecure.h>
 
 
 class CNetworkManager
@@ -31,6 +33,11 @@ class CNetworkManager
         std::string GetIP() const;
 
         void SetOTAStatus(bool s) { m_isInOTA = s; }
+        WiFiClientSecure& GetClient() { return m_client; }
+    protected:
+        void RegisterHandlers();
+
+
     private:
         const char* hostname;
         const char* ssid;
@@ -39,6 +46,7 @@ class CNetworkManager
         AsyncWebServer m_server;
 
         bool m_isInOTA;
+        WiFiClientSecure m_client;
     
 };
 

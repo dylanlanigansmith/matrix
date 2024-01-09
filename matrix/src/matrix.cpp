@@ -8,7 +8,9 @@
 
 CMatrix::CMatrix(const matrix_pin_t &pins) : m_pins(pins), m_is_init(false)
 {
-
+  m_speed = { 100u, 1u};
+  m_nextSpeed = m_speed;
+  m_overrideSpeed = false;
 }
 
 bool CMatrix::Init()
@@ -26,7 +28,10 @@ void CMatrix::ScrollText(const char* disp)
     int wd;
   wd = HT1632.getTextWidth(disp, FONT_8X4_END, FONT_8X4_HEIGHT);
   
-  int i = 0 + wd; //+ wd = start from right
+  int i = 0 + MATRIX_WIDTH; //+ wd = start from right
+
+  auto speed = (m_overrideSpeed) ? m_nextSpeed : m_speed;
+  
   while (i > -wd) {
     //this scrolls
     HT1632.renderTarget(0);
@@ -44,10 +49,11 @@ void CMatrix::ScrollText(const char* disp)
     HT1632.drawText(disp, i - 64, 0, FONT_8X4, FONT_8X4_END, FONT_8X4_HEIGHT);
     HT1632.render();
 
-    i = i - 1; //scroll speed at 1px / 100ms
-    delay(100);
+    i = i - speed.second; //scroll speed at 1px / 100ms
+    delay(speed.first);
 
   }
+  m_overrideSpeed = false;
      //OG: if i > -wd, i = 0
 }
 void CMatrix::ScrollText(const std::string &text)
@@ -65,6 +71,25 @@ void CMatrix::printf(const char *fmt, ...)
   ScrollText(buf);
   va_end(args);
 }
+void CMatrix::displayf(const char *fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  char buf[512]; //too big?
+  vsnprintf(buf, sizeof(char) * 512, fmt, args);
+
+  int width = GetTextWidth(buf);
+  if(width > MATRIX_WIDTH - 1)
+    ScrollText(buf);
+  else{
+     auto speed = (m_overrideSpeed) ? m_nextSpeed : m_speed;
+    StaticText(buf); 
+   
+     m_overrideSpeed = false;
+  }
+    
+  va_end(args);
+}
 void CMatrix::staticf(const char *fmt, ...)
 {
   va_list args;
@@ -79,7 +104,7 @@ void CMatrix::StaticText(const char *disp)
 {
   int wd;
   wd = GetTextWidth(disp);
-
+  auto speed = (m_overrideSpeed) ? m_nextSpeed : m_speed;
   int offset = (wd > MATRIX_WIDTH) ? (6) : (MATRIX_WIDTH - wd) / 2;
   int pos = 0 ;//wd / 2; //why the fuck
 
@@ -97,11 +122,23 @@ void CMatrix::StaticText(const char *disp)
   HT1632.clear();
   HT1632.drawText(disp, pos - 64 + offset, 0, FONT_8X4, FONT_8X4_END, FONT_8X4_HEIGHT);
   HT1632.render();
-  delay(50); //legacy
-  
+  delay(m_speed.first); //legacy
+   m_overrideSpeed = false;
 }
 
 int CMatrix::GetTextWidth(const char *disp)
 {
     return HT1632.getTextWidth(disp, FONT_8X4_END, FONT_8X4_HEIGHT);
+}
+
+
+void CMatrix::SetBrightness(float amt)
+{
+  int brightness = static_cast<int>(float( amt * 16.f));
+  uint8_t val = std::max(std::min(brightness, 16), 0);
+  for(int i = 0; i < 3; ++i){
+     HT1632.renderTarget(i);
+     HT1632.setBrightness(val);
+  }
+ 
 }

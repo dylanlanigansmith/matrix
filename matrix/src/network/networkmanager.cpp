@@ -6,6 +6,7 @@
 #include <ESPmDNS.h>
 #include <ElegantOTA.h>
 
+#include <api/spotify.hpp>
 
 void onOTAStart(){
     NetworkManager.SetOTAStatus(true);
@@ -50,9 +51,9 @@ uint8_t CNetworkManager::Connect(int32_t timeout)
         return MDNS_FAIL;
     }
 
-    m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", "ESP32 Matrix");
-    });
+    RegisterHandlers();
+
+   
 
 
     ElegantOTA.onStart(&onOTAStart);
@@ -104,4 +105,29 @@ const char *CNetworkManager::GetErrorMessage(uint8_t err) const
 
 std::string CNetworkManager::GetIP() const {
     return std::string(WiFi.localIP().toString().c_str()); //wtf
+}
+void CNetworkManager::RegisterHandlers()
+{
+     m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", "ESP32 Matrix");
+    });
+    m_server.onNotFound(  [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", "page not found sorry");
+    });
+      m_server.on("/bright", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", "Set Brightness to full");
+         matrix.SetBrightness(1.0);
+    });
+     m_server.on("/dim", HTTP_GET, [](AsyncWebServerRequest *request) {
+        matrix.SetBrightness(0.5);
+        request->send(200, "text/plain", "Set Brightness to 0.5l");
+    });
+     m_server.on("/dark", HTTP_GET, [](AsyncWebServerRequest *request) {
+         matrix.SetBrightness(0.0);
+        request->send(200, "text/plain", "Set Brightness to 0");
+    });
+    
+
+
+    Spotify.Init(m_server);
 }
