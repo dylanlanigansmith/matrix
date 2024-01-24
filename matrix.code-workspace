@@ -3,5 +3,13 @@
         {
             "path": "matrix"
         }
-    ]
+    ],
+    "settings": {
+        "files.associations": {
+            "*.tcc": "cpp",
+            "optional": "cpp",
+            "system_error": "cpp",
+            "regex": "cpp"
+        }
+    }
 }

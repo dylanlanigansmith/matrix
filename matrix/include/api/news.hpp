@@ -4,6 +4,10 @@
 #define NEWS_NUM_HEADLINES 8
 #define NEWS_COUNTRY "ca"
 #define NEWS_SOURCES "cbc-news,cnn,tech-crunch,bbc-news,reuters"
+
+
+#define NEWS_DISPLAY_ON_BOOT 0
+
 struct headline_t{
     std::string m_src;
     std::string m_title;

@@ -12,7 +12,8 @@ void LocationApi::Parse(ArduinoJson::DynamicJsonDocument& json) //todo get timez
 
 void LocationApi::Display(int type)
 {
-    matrix.printf("%s %.3f/%.3f %s", m_location.city.c_str(), m_location.lat, m_location.lng, m_location.timeabbr.c_str());
+    matrix.displayf("%s (%s)", m_location.city.c_str(), m_location.timeabbr.c_str());
+   // matrix.printf("%s %.3f/%.3f %s", m_location.city.c_str(), m_location.lat, m_location.lng, m_location.timeabbr.c_str());
 }
 
 ArduinoJson::V6214PB2::DeserializationError LocationApi::Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data)

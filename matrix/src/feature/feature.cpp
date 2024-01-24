@@ -12,6 +12,10 @@ void CFeatureManager::OnLoop()
 {
     CTime curTime;
     static CTime lastUpdate = curTime;
+
+    if(NetworkManager.InOTA() || IsLocked()){
+        m_state = Feature_Locked; delay(50); return;
+    }
     if(curTime.ms() > lastUpdate.ms() + TIME_UPDATE_RATE){
         for(auto& interval : m_intervals){
             if( interval.second.Update(curTime)){
@@ -20,6 +24,13 @@ void CFeatureManager::OnLoop()
             }
         }
     }
+    /*
+    Anything that displays text should be a state (do as I say not as I do) (im you... fix yr shit)
+
+    -update funcs /  intervals should be moved Async
+    -tbh this would be a good excuse to learn RTOS
+    
+    */
     switch(m_state)
     {
         case Feature_NowPlaying:
@@ -27,6 +38,10 @@ void CFeatureManager::OnLoop()
         case Feature_Headline:
             NewHeadline(); //not imp
             break;
+        case Feature_Locked:
+            break;
+        case Feature_Developer: //todo
+            DeveloperState(); break;
         case Feature_Default:
         default:
             DisplayDefault(); break;
@@ -41,6 +56,21 @@ void CFeatureManager::NewHeadline()
     scroll half with static thing 
 
     */
+
+    Headlines.Display(2); 
+
+    m_state = Feature_Default; //make function and remember last state! also enforce locks
+}
+
+void CFeatureManager::DeveloperState()
+{
+    auto startTime = millis();
+    
+    matrix.ScrollSplit("Mitski - My Body's Made Of Crushed Little Stars", [this, startTime](){
+
+        
+        return std::to_string(   (millis() - startTime ) / 1000);
+    });
 }
 
 void CFeatureManager::DisplayDefault()
@@ -56,6 +86,17 @@ inline songtime_t GetSongTime(long ms){
     ret.second = (ms % 60);
     return ret;
 }
+inline songtime_t UpdateSongTime(){
+    long ms = Spotify.m_current.progressMs + ( CTime() - Spotify.m_currentUpdate).ms();
+    ms /= 1000;
+    songtime_t ret = {0u,0u};
+    ret.first = ms / 60;
+    ret.second = (ms % 60);
+    return ret;
+}
+
+
+
 void CFeatureManager::NowPlaying()
 {
     if(!Spotify.m_current.trackName){
@@ -86,11 +127,21 @@ void CFeatureManager::NowPlaying()
     matrix.SetNextSpeed({75,1});
     if(canFit){
         if(canFitBoth){
-             matrix.displayf("%s %02lu:%02lu", disp, prog.first, prog.second );
+             matrix.displayf("%s %02lu:%02lu", disp, prog.first, prog.second ); //should be staticf
         }
         else  matrix.displayf("%s", disp);
     }
-    else matrix.displayf("%s", disp);
+    else{
+        matrix.ScrollSplit(disp, [this](){
+            auto prog = UpdateSongTime();
+            int tb_size = 16;
+            char tb[tb_size];
+            if(snprintf(tb, tb_size, "%02lu:%02lu", prog.first, prog.second) >= tb_size){
+                return std::string("buf");
+            };
+            return std::string(tb);
+        });
+    } 
    
     matrix.ResetSpeed();
     auto curTime = CTime();
@@ -101,13 +152,14 @@ void CFeatureManager::NowPlaying()
 
     //imagine a callback during scrolling that lets me update buffer
     //sounds like a mess 
-    
+    //we are doing that now! 
 
    //matrix.printf("%s - %s %02lu:%02lu / %02lu:%02lu ",Spotify.m_current.trackName, Spotify.m_current.artists[0].artistName, prog.first, prog.second, dur.first, dur.second);
 }
 
 void CFeatureManager::Init()
 {
+   
     matrix.SetNextSpeed({30,1});
     LocationApi::Instance().Display();
     
@@ -118,7 +170,7 @@ void CFeatureManager::Init()
             long prevDur = Spotify.m_current.durationMs;
             Spotify.Update();
             if(Spotify.m_current.durationMs != prevDur && Spotify.IsPlaying()){
-                Spotify.Display();
+                Spotify.Display(); //sus
             }
            if(Spotify.IsPlaying()){
                 m_state = Feature_NowPlaying;
@@ -142,7 +194,7 @@ void CFeatureManager::Init()
     m_intervals.emplace("UpdateHeadlines", CInterval(CTime(45.f), [this](){
         bool prev_heads = !Headlines.headlines().empty();
         Headlines.Get();
-        if(!prev_heads){ //display headlines on boot
+        if(!prev_heads && NEWS_DISPLAY_ON_BOOT){ //display headlines on boot
             Headlines.Display(2);
         }
     }
@@ -150,7 +202,8 @@ void CFeatureManager::Init()
     ));
      m_intervals.emplace("ShowHeadlines", CInterval(CTime(10.f), [this](){
         //amt thing sorta sucks
-        Headlines.Display(2); //this should be a state!!!!!!!
+        m_state = Feature_Headline;
+       
     }
     
     ));

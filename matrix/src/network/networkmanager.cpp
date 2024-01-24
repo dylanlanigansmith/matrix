@@ -8,6 +8,8 @@
 
 #include <api/spotify.hpp>
 
+#include <feature/feature.hpp>
+
 void onOTAStart(){
     NetworkManager.SetOTAStatus(true);
 }
@@ -130,6 +132,22 @@ const char* homepage =
 
 void CNetworkManager::RegisterHandlers()
 {
+
+    auto tryParam = [](AsyncWebServerRequest *request, const char* name, std::string& toSet){
+        if(!request || !name || !request->hasArg(name)) return false;
+
+        //WHY!!!
+        //2: warning: init-statement in selection statements only available with -std=c++17 or -std=gnu++17
+        // if(auto arg =  request->getParam(name); arg){
+         //   ^~~~
+        auto arg =  request->getParam(name);
+        if( arg){
+            toSet = arg->value().c_str();
+            return true;
+        }
+        return false;
+
+    };
      m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/html", homepage);
     });
@@ -147,6 +165,53 @@ void CNetworkManager::RegisterHandlers()
      m_server.on("/dark", HTTP_GET, [](AsyncWebServerRequest *request) {
          matrix.SetBrightness(0.0);
         request->send(200, "text/plain", "Set Brightness to 0");
+    });
+
+      m_server.on("/test", HTTP_GET, [tryParam](AsyncWebServerRequest *request) {
+         
+        
+        std::string arg = "";
+         
+         if(tryParam(request, "exit", arg)){
+            Features.ExitState();
+            request->send(200, "text/plain", "set state to last");
+         }
+         else{
+            Features.SetState(Feature_Developer);
+            request->send(200, "text/plain", "set state to dev");
+         }
+         
+     
+        
+    });
+    m_server.on("/lock", HTTP_GET, [tryParam](AsyncWebServerRequest *request) {
+        
+         
+        std::string val = "";
+            
+        if(tryParam(request, "unlock", val)){
+            Features.Unlock();
+        }
+        else if(tryParam(request, "lock", val)){
+            Features.Lock();
+        }
+        else {
+            if(Features.IsLocked()) Features.Unlock();
+            else Features.Lock();
+        }
+         request->send(200, "text/plain", (std::string("set feature lock -> ").append(std::to_string(Features.IsLocked()))).c_str() );
+
+        
+        
+    });
+    m_server.on("/test2", HTTP_GET, [](AsyncWebServerRequest *request) {
+         request->send(200, "text/plain", "testing scroll");
+          Features.Lock();
+        matrix.StaticText("Jan. 24 2023", "4:55pm -3c");
+        delay(8000);
+      //  matrix.ScrollSplit("Mitski - My Body's Made Of Crushed Little Stars", "4:59");
+        Features.Unlock();
+       
     });
        m_server.on("/reset", HTTP_GET, [this](AsyncWebServerRequest *request) {
         this->Reset();

@@ -33,6 +33,7 @@ class CNetworkManager
         std::string GetIP() const;
 
         void SetOTAStatus(bool s) { m_isInOTA = s; }
+        inline bool InOTA() const { return m_isInOTA; }
         WiFiClientSecure& GetClient() { return m_client; }
         std::string& GetLastRequest() { return m_lastRequest; }
         void SetLastRequest(const std::string& url) { m_lastRequest = url; }
