@@ -5,6 +5,9 @@
 #define MATRIX_WIDTH 96
 #define MATRIX_HEIGHT 8
 
+#define NUM_PANELS 3
+#define PANEL_WIDTH 32
+
 struct matrix_pin_t
 {
     uint8_t wr;
@@ -33,7 +36,7 @@ public:
     bool Init();
 
 
-
+    //should return time taken to scroll
     void ScrollText(const std::string& text);
     void ScrollText(const char* disp);
     void printf(const char* fmt, ...);
@@ -53,9 +56,12 @@ public:
     inline void ResetSpeed() { m_nextSpeed = m_speed; m_overrideSpeed = false; }
 
     void SetBrightness(float amt);
+
+    int ScrollSplit(const char* scrollmsg, const char* staticmsg);
+
 private:
     
-
+    
 
 private:
     const matrix_pin_t m_pins;
@@ -65,5 +71,6 @@ private:
     scrollspeed m_nextSpeed;
     bool m_overrideSpeed;
 };
+
 
 extern CMatrix matrix;

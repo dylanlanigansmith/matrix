@@ -56,6 +56,22 @@ void CMatrix::ScrollText(const char* disp)
   m_overrideSpeed = false;
      //OG: if i > -wd, i = 0
 }
+
+
+int CMatrix::ScrollSplit(const char* scrollmsg, const char* staticmsg)
+{
+  int static_wd = GetTextWidth(staticmsg), wd = GetTextWidth(scrollmsg);
+
+  if(static_wd > (MATRIX_WIDTH / 2) ) return -1;
+
+
+  
+  return 0;
+
+}
+
+
+
 void CMatrix::ScrollText(const std::string &text)
 {
   ScrollText(text.c_str());
