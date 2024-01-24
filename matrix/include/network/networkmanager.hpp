@@ -15,7 +15,7 @@ class CNetworkManager
 
         void OnLoop();
 
-
+        void Reset();
         enum NetErrorCodes : uint8_t{
             NET_ERR_UNKN = 0xFF,
             NET_SUCCESS = 0,
@@ -34,6 +34,10 @@ class CNetworkManager
 
         void SetOTAStatus(bool s) { m_isInOTA = s; }
         WiFiClientSecure& GetClient() { return m_client; }
+        std::string& GetLastRequest() { return m_lastRequest; }
+        void SetLastRequest(const std::string& url) { m_lastRequest = url; }
+
+        void Error(const char* msg = "NetError");
     protected:
         void RegisterHandlers();
 
@@ -47,6 +51,7 @@ class CNetworkManager
 
         bool m_isInOTA;
         WiFiClientSecure m_client;
+        std::string m_lastRequest;
     
 };
 

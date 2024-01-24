@@ -33,8 +33,8 @@ public:
     [[nodiscard]] inline const weather_t& get() const { return m_weather; }
 
     virtual std::string MakeURL() override{
-        static auto url = ApiRequest::MakeURL("http://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,surface_pressure,wind_speed_10m&timezone=America%2FNew_York&forecast_days=1",
-        LocationApi::Instance().Latitude(), LocationApi::Instance().Longitude()
+        static auto url = ApiRequest::MakeURL("http://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&%s",
+        LocationApi::Instance().Latitude(), LocationApi::Instance().Longitude(), "current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,surface_pressure,wind_speed_10m&timezone=America%2FNew_York&forecast_days=1"
          );
         return url;
     }

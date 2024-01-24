@@ -1,5 +1,5 @@
 #include "api/api.hpp"
-
+#include <network/networkmanager.hpp>
 #include <HTTPClient.h>
 
 void ApiRequest::Get() 
@@ -14,6 +14,7 @@ bool ApiRequest::request()
     ArduinoJson::DynamicJsonDocument json(m_size);
     auto url = MakeURL();
     LOGF("try request %s", url.c_str());
+    NetworkManager.SetLastRequest(url);
     if(!http.begin(url.c_str())){
         //fail
         LOGF("http:;begin failed %s", url);

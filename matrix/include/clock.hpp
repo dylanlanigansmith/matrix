@@ -53,17 +53,18 @@ private:
         if(date){
             snprintf(m_datebuf, TIMEBUF_SIZE, "%i/%i/%i", m_timeinfo.tm_mon, m_timeinfo.tm_mday,  m_timeinfo.tm_year);
         }
-
+        
         int hr =  m_timeinfo.tm_hour;
         if(m_use24hr)
             snprintf(m_timebuf, TIMEBUF_SIZE, "%02i:%02i", hr, m_timeinfo.tm_min);
         else{
-            if(hr > 12)
-                 snprintf(m_timebuf, TIMEBUF_SIZE, "%i:%02i:%02i PM", hr - 12, m_timeinfo.tm_min, m_timeinfo.tm_sec);
-            
-            else
-               snprintf(m_timebuf, TIMEBUF_SIZE, "%i:%02i:%02i AM", hr, m_timeinfo.tm_min, m_timeinfo.tm_sec);
-            
+            static constexpr const char* twelvehr[] = { "PM", "AM"};
+            bool isPM = (hr >= 12);
+            const char* hr_str = (isPM) ? twelvehr[0] : twelvehr[1];
+            if(hr == 0) hr = 12;
+            if(isPM && hr > 12) hr -= 12;
+            snprintf(m_timebuf, TIMEBUF_SIZE, "%i:%02i:%02i %s", hr, m_timeinfo.tm_min, m_timeinfo.tm_sec, hr_str);
+
         }
         
         

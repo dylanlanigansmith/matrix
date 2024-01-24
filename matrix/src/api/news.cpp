@@ -63,10 +63,19 @@ ArduinoJson::V6214PB2::DeserializationError NewsApi::Deserialize(ArduinoJson::Dy
 void NewsApi::Display(int type)
 {
     if(!m_headlines.empty()){
+        int num_played = 0;
         for(auto& hl : m_headlines){
-             matrix.SetNextSpeed({70,1});
-            matrix.printf("%s: %s", hl.m_src.c_str(), hl.m_title.c_str());
+            if(hl.m_displayed)
+              continue;
+            if(num_played > type && type > 0)
+              continue;
+            matrix.SetNextSpeed({60,1});
+            if(hl.m_src.empty() || hl.m_src.compare("null") || hl.m_src.length() <= 1)
+                matrix.printf("News: %s", hl.m_title.c_str());
+            else 
+                matrix.printf("%s: %s", hl.m_src.c_str(), hl.m_title.c_str());
             hl.m_displayed = true;
+            num_played++;
         }        
     }
     else{

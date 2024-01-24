@@ -25,9 +25,10 @@ void onOTAEnd(bool success) {
     matrix.staticf("update success!");
   } else {
      matrix.staticf("update failed");
+       delay(1000);
   }
 
-  delay(700);
+
   NetworkManager.SetOTAStatus(false);
 }
 
@@ -76,12 +77,29 @@ void CNetworkManager::OnLoop()
          ElegantOTA.loop();   
     }
     if(WiFi.status() != WL_CONNECTED){
-        for(;;){
-            matrix.printf("lost connection to %s", ssid); //todo
+        int warntime = 0;
+        while(warntime < 5){
+            warntime++;
+            matrix.printf("lost %s %d/5", ssid, warntime); //todo
             delay(1000);
         }
+        Error();
     }
 }
+void CNetworkManager::Error(const char* msg ){
+    matrix.displayf("Error: %s", msg); //dumb
+    Reset();
+}
+void CNetworkManager::Reset()
+{
+    WiFi.disconnect();
+    matrix.displayf("RESET");
+    
+    delay(1000);
+    ESP.restart();
+
+}
+
 const char *CNetworkManager::GetErrorMessage(uint8_t err) const
 {
     switch (err)
@@ -106,10 +124,14 @@ const char *CNetworkManager::GetErrorMessage(uint8_t err) const
 std::string CNetworkManager::GetIP() const {
     return std::string(WiFi.localIP().toString().c_str()); //wtf
 }
+
+const char* homepage = 
+"<html> <head><title>MATRIX32</title></head><body><h1>ESP MATRIX32</h1><a href=\"/update\">update</a> <a href=\"/reset\">reset</a> <a href=\"/dark\">dark</a> ></body> </html>";
+
 void CNetworkManager::RegisterHandlers()
 {
      m_server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", "ESP32 Matrix");
+        request->send(200, "text/html", homepage);
     });
     m_server.onNotFound(  [](AsyncWebServerRequest *request) {
         request->send(200, "text/plain", "page not found sorry");
@@ -126,8 +148,15 @@ void CNetworkManager::RegisterHandlers()
          matrix.SetBrightness(0.0);
         request->send(200, "text/plain", "Set Brightness to 0");
     });
+       m_server.on("/reset", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        this->Reset();
+        request->redirect("/");
+        request->send(200, "text/plain", "Bye");
+    });
     
-
+     m_server.on("/debugapi", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", this->GetLastRequest().c_str());
+    });
 
     Spotify.Init(m_server);
 }

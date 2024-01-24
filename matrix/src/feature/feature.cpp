@@ -24,11 +24,23 @@ void CFeatureManager::OnLoop()
     {
         case Feature_NowPlaying:
             NowPlaying(); break;
+        case Feature_Headline:
+            NewHeadline(); //not imp
+            break;
         case Feature_Default:
         default:
             DisplayDefault(); break;
     }
    
+}
+void CFeatureManager::NewHeadline()
+{
+    //bigger fish to fry
+    /*
+    
+    scroll half with static thing 
+
+    */
 }
 
 void CFeatureManager::DisplayDefault()
@@ -96,6 +108,7 @@ void CFeatureManager::NowPlaying()
 
 void CFeatureManager::Init()
 {
+    matrix.SetNextSpeed({30,1});
     LocationApi::Instance().Display();
     
     m_intervals.emplace("UpdateSpotify", CInterval(CTime(time_sec_t(15)), 
@@ -122,22 +135,22 @@ void CFeatureManager::Init()
             Weather.Get();
             matrix.SetNextSpeed({50,1});
             Weather.Display();  
-             matrix.ResetSpeed();
+            matrix.ResetSpeed();
         } 
     ));
-
+   
     m_intervals.emplace("UpdateHeadlines", CInterval(CTime(45.f), [this](){
         bool prev_heads = !Headlines.headlines().empty();
         Headlines.Get();
-        if(!prev_heads){
-            Headlines.Display();
+        if(!prev_heads){ //display headlines on boot
+            Headlines.Display(2);
         }
     }
     
     ));
      m_intervals.emplace("ShowHeadlines", CInterval(CTime(10.f), [this](){
-        
-        Headlines.Display(); //this should be a state!!!!!!!
+        //amt thing sorta sucks
+        Headlines.Display(2); //this should be a state!!!!!!!
     }
     
     ));

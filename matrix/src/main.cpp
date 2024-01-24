@@ -40,12 +40,15 @@ void setup () {
 
   matrix.Init();
   matrix.StaticText("init matrix");
-  if(uint8_t err =  NetworkManager.Connect(); err != CNetworkManager::NET_SUCCESS){
+  uint8_t err =  NetworkManager.Connect();
+  if(err != CNetworkManager::NET_SUCCESS){
      for(;;){
         LOGF("Network Error: %s", NetworkManager.GetErrorMessage(err))
 
         matrix.printf("Network Error: %s", NetworkManager.GetErrorMessage(err));
-        delay(400);
+        delay(4000);
+        NetworkManager.Error();
+        //todo
      }
        
   }
