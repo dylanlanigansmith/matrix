@@ -5,10 +5,11 @@
 #include <AsyncTCP.h>
 #include <ESPmDNS.h>
 #include <ElegantOTA.h>
-
+#include <SPIFFS.h>
 #include <api/spotify.hpp>
 
 #include <feature/feature.hpp>
+
 
 void onOTAStart(){
     NetworkManager.SetOTAStatus(true);
@@ -33,11 +34,133 @@ void onOTAEnd(bool success) {
 
   NetworkManager.SetOTAStatus(false);
 }
+bool CNetworkManager::GetConfig(net_config& cfg)
+{
+    constexpr bool dbg = true;
+  
 
+    File cfg_file = SPIFFS.open("/config.json");
+    if(!cfg_file ){
+        if(dbg) matrix.ScrollText("couldn't find /config.json");
+        return false;
+    }
+    
+    /*
+    while(cfg_file.available()){
+        Serial.write(cfg_file.read());
+    }*/
+   
+    ArduinoJson::StaticJsonDocument<256> j;
+    auto err = ArduinoJson::deserializeJson(j, cfg_file);
+
+    cfg_file.close();
+    if(err != ArduinoJson::DeserializationError::Ok){
+        if(dbg) matrix.printf("json error %i", err);
+        delay(500);
+
+        
+
+        return false;
+    }
+
+    if(dbg){ matrix.StaticText("GetConfig OK"); delay(400); 
+    }
+
+    cfg.ssid = j["ssid"].as<std::string>();
+    cfg.pwd = j["wifi_pwd"].as<std::string>();
+    if(dbg){
+         matrix.SetNextSpeed({50,1});
+        matrix.printf("ssid %s pwd %s", j["ssid"].as<String>().c_str(), j["wifi_pwd"].as<String>().c_str() );
+    }
+   
+
+
+    return true;
+}
+bool CNetworkManager::WriteConfig(net_config& cfg)
+{
+    constexpr bool dbg = false;
+
+    if(SPIFFS.exists("/config.json")){
+        SPIFFS.remove("/config.json");
+    }
+    File cfg_file = SPIFFS.open("/config.json", FILE_WRITE);
+    if(!cfg_file ){
+        if(dbg) matrix.ScrollText("couldn't create /config.json");
+        return false;
+    }
+    
+    ArduinoJson::StaticJsonDocument<256> j;
+
+
+    j["ssid"] = cfg.ssid;
+    j["wifi_pwd"] = cfg.pwd ;
+   
+    
+    if(ArduinoJson::serializeJson(j, cfg_file) == 0){
+        if(dbg) matrix.ScrollText("json write to file failed"); cfg_file.close();
+        return false;
+    }
+    cfg_file.close();
+
+
+    if(dbg){ matrix.StaticText("WriteConfig OK"); delay(400); 
+    }
+
+    return true;
+}
+
+void CNetworkManager::InitSetup(){
+    if(!WiFi.softAP("MATRIX")){
+        matrix.StaticText("create AP failed"); 
+        delay(1000); Error();
+    }
+    if (!MDNS.begin(hostname)){
+        matrix.ScrollText("MDNS failed use ip");
+    }
+    m_server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
+
+        if(request->hasArg("ssid") && request->hasArg("pwd")){
+            auto p_s = request->getParam("ssid");
+            auto p_p = request->getParam("pwd");
+            if(p_s && p_p){
+                net_config nc = {
+                    p_s->value().c_str(), p_p->value().c_str()
+                };
+                if(WriteConfig(nc)){
+                    request->send(200, "text/plain", "wifi creds wrote");
+                    delay(500); //sorrrrrry asycn
+                    Reset();
+                }
+                else request->send(200, "text/plain", "wifi cred write fail!");
+            }
+            else
+                request->send(200, "text/plain", "wifi cred arg parse failed");
+        }
+        else
+            request->send(200, "text/plain", "http://matrix.local/?ssid=an+Example+SSID&pwd=Password123");
+    });
+
+    m_server.begin();
+    matrix.ScrollText("created Wifi MATRIX for setup");
+}
 uint8_t CNetworkManager::Connect(int32_t timeout)
 {
+    if(!SPIFFS.begin(true)){
+        matrix.ScrollText("failed mounting SPIFFS!");
+        return NET_ERR_UNKN;
+    }
+    
+    net_config netcfg;
+    if(!GetConfig(netcfg)){
+        return NET_ERR_UNKN;
+       // netcfg = { ssid, pwd}; //hope for the best
+    }
+      //  net_config netcfg = { ssid, pwd};
+      //  WriteConfig(netcfg);
+    
     WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, pwd);
+    WiFi.begin(netcfg.ssid.c_str(), netcfg.pwd.c_str());
     int32_t max_timeout = timeout;
     while (WiFi.status() != WL_CONNECTED)
     {
@@ -68,7 +191,7 @@ uint8_t CNetworkManager::Connect(int32_t timeout)
 
     m_server.begin();
     
-
+    
     return NET_SUCCESS;
 }
 void CNetworkManager::OnLoop()
@@ -82,13 +205,15 @@ void CNetworkManager::OnLoop()
         int warntime = 0;
         while(warntime < 5){
             warntime++;
-            matrix.printf("lost %s %d/5", ssid, warntime); //todo
+            matrix.printf("lost %s %d/5", WiFi.SSID().c_str(), warntime); //todo
             delay(1000);
         }
         Error();
     }
 }
 void CNetworkManager::Error(const char* msg ){
+
+ 
     matrix.displayf("Error: %s", msg); //dumb
     Reset();
 }
@@ -221,6 +346,29 @@ void CNetworkManager::RegisterHandlers()
     
      m_server.on("/debugapi", HTTP_GET, [this](AsyncWebServerRequest *request) {
         request->send(200, "text/plain", this->GetLastRequest().c_str());
+    });
+
+     m_server.on("/wifi", HTTP_GET, [this](AsyncWebServerRequest *request) {
+
+        if(request->hasArg("ssid") && request->hasArg("pwd")){
+            auto p_s = request->getParam("ssid");
+            auto p_p = request->getParam("pwd");
+            if(p_s && p_p){
+                net_config nc = {
+                    p_s->value().c_str(), p_p->value().c_str()
+                };
+                if(WriteConfig(nc)){
+                    request->send(200, "text/plain", "wifi creds wrote");
+                    delay(500); //sorrrrrry asycn
+                    Reset();
+                }
+                else request->send(200, "text/plain", "wifi cred write fail!");
+            }
+            else
+                request->send(200, "text/plain", "wifi cred arg parse failed");
+        }
+        else
+            request->send(200, "text/plain", "ex: http://matrix.local/wifi?ssid=an+Example+SSID&pwd=Password123");
     });
 
     Spotify.Init(m_server);

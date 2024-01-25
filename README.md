@@ -50,10 +50,14 @@
 		* Originally for an older Arduino, could really be faster/more efficient
 	+ Ideally should use RTOS / task based approach and better queuing for different tasks / states accessing the display
 - WebUI needs a finished settings page
-- WiFI credentials need to be saved to flash, and a setup mode where the ESP hosts a network so one can join it and provide wifi-creds 
-	+ Would be cool for a party mode as the "now playing" feature would be nice next to a bluetooth speaker 
+- WiFI credentials are saved to flash, see <matrix/data/config.json> or the NetworkManager class. 
+	+ on the event of WiFi failure, the matrix hosts a wifi, you can join and set the SSID/pwd there... 
+	+ no UI for this yet, *TODO*
+	+ *TODO*: cleanup and move NetworkManager into its own library for use in other personal projects
+
 - Boy do I love ESP OTA updates, makes development fun not fiddling with USB->FTDI cables and reset buttons. 
 	+ Noticing a bug, quickly fixing it, and having Platform.IO uploading a patch automatically post-compilation makes for fantastic workflow
-- One must configure [api_config.hpp](https://github.com/dylanlanigansmith/matrix/blob/main/matrix/include/api_config.hpp.example) with their own credentials 
-
+- One must configure [api_config.hpp](https://github.com/dylanlanigansmith/matrix/blob/main/matrix/include/api_config.hpp.example) with their own API credentials 
+	+ will instead save these to SPIFFS or something in near future, before I accidentally somehow commit API tokens again.. (VSCode overwrote my .gitignore a few weeks ago and I got to learn how to edit the history of git repositories as a result!)
+  
 		
