@@ -14,7 +14,7 @@ public:
     CClock(uint32_t m_timeout = 5000) : m_lastUpdate(0u), m_timeout(m_timeout), m_use24hr(false) {}
 
     void Init(){
-        configTime(LocationApi::Instance().GMTOffset(), daylightOffset_sec, ntp_server);
+        configTime(LocationApi::Instance().GMTOffset(), (LocationApi::Instance().isDST() ? 0 : daylightOffset_sec) , ntp_server); //this is wrong-> just is is DST following location iirc
 
         uint8_t attempts = 0;
         while(!_getTime(&m_timeinfo)){

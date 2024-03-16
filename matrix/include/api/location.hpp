@@ -10,8 +10,10 @@ struct location_t
     float lat;
     float lng;
     long timeoffset;
+    
     std::string timeabbr; //smh
     std::string city;
+    bool is_dst;
 };
 
 class LocationApi : public ApiRequest
@@ -38,6 +40,11 @@ public:
      long GMTOffset() const { return m_location.timeoffset; }
      const location_t& Location() { return m_location; } //again should be const but idfk/c
 
+    inline bool isDST(){
+        if (m_hasInit){
+            return m_location.is_dst;
+        }
+    }
 protected:
         ArduinoJson::StaticJsonDocument<256> MakeFilter();
 private:

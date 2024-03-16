@@ -9,7 +9,7 @@
 #include <api/spotify.hpp>
 
 #include <feature/feature.hpp>
-
+#include <config/ui_html.hpp>
 
 void onOTAStart(){
     NetworkManager.SetOTAStatus(true);
@@ -110,15 +110,12 @@ bool CNetworkManager::WriteConfig(net_config& cfg)
     return true;
 }
 
-void CNetworkManager::InitSetup(){
-    if(!WiFi.softAP("MATRIX")){
-        matrix.StaticText("create AP failed"); 
-        delay(1000); Error();
-    }
-    if (!MDNS.begin(hostname)){
-        matrix.ScrollText("MDNS failed use ip");
-    }
-    m_server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
+ArRequestHandlerFunction wifi_request(AsyncWebServerRequest *request){
+    request->send(200, "text/html", html_wifi_setup);
+}
+
+void registerWifiRequestHandler(CNetworkManager* net, AsyncWebServer& m_server){
+     m_server.on("/wifi", HTTP_GET, [net](AsyncWebServerRequest *request) {
 
         if(request->hasArg("ssid") && request->hasArg("pwd")){
             auto p_s = request->getParam("ssid");
@@ -127,22 +124,45 @@ void CNetworkManager::InitSetup(){
                 net_config nc = {
                     p_s->value().c_str(), p_p->value().c_str()
                 };
-                if(WriteConfig(nc)){
-                    request->send(200, "text/plain", "wifi creds wrote");
+                if(net->WriteConfig(nc)){
+                    request->send(200, "text/plain", "WIFI_CFG_WRITE_OK");
                     delay(500); //sorrrrrry asycn
-                    Reset();
+                    net->Reset();
                 }
-                else request->send(200, "text/plain", "wifi cred write fail!");
+                else request->send(200, "text/plain", "WIFI_CFG_WRITE_FAIL");
             }
             else
-                request->send(200, "text/plain", "wifi cred arg parse failed");
+                request->send(200, "text/plain", "WIFI_CFG__ARGPARSE_FAIL");
         }
         else
-            request->send(200, "text/plain", "http://matrix.local/?ssid=an+Example+SSID&pwd=Password123");
+            request->send(200, "text/html", html_wifi_setup);
     });
 
+}
+
+void CNetworkManager::InitSetup(){ //init for when we cant connect to wifi! 
+    if(!WiFi.softAP("MATRIX")){
+        matrix.StaticText("create AP failed"); 
+        delay(1000); Error();
+    }
+    if (!MDNS.begin(hostname)){
+        matrix.ScrollText("MDNS failed use ip");
+    }
+    m_server.onNotFound(  [](AsyncWebServerRequest *request) {
+         request->send(200, "text/plain", "404 page not found sorry");
+        request->redirect("/");
+       
+    });
+    m_server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        request->redirect("/wifi");
+            
+    });
+    registerWifiRequestHandler(this, this->m_server);
     m_server.begin();
     matrix.ScrollText("created Wifi MATRIX for setup");
+
+    //why dont we do OTA here??
+    
 }
 uint8_t CNetworkManager::Connect(int32_t timeout)
 {
@@ -348,28 +368,7 @@ void CNetworkManager::RegisterHandlers()
         request->send(200, "text/plain", this->GetLastRequest().c_str());
     });
 
-     m_server.on("/wifi", HTTP_GET, [this](AsyncWebServerRequest *request) {
-
-        if(request->hasArg("ssid") && request->hasArg("pwd")){
-            auto p_s = request->getParam("ssid");
-            auto p_p = request->getParam("pwd");
-            if(p_s && p_p){
-                net_config nc = {
-                    p_s->value().c_str(), p_p->value().c_str()
-                };
-                if(WriteConfig(nc)){
-                    request->send(200, "text/plain", "wifi creds wrote");
-                    delay(500); //sorrrrrry asycn
-                    Reset();
-                }
-                else request->send(200, "text/plain", "wifi cred write fail!");
-            }
-            else
-                request->send(200, "text/plain", "wifi cred arg parse failed");
-        }
-        else
-            request->send(200, "text/plain", "ex: http://matrix.local/wifi?ssid=an+Example+SSID&pwd=Password123");
-    });
+    registerWifiRequestHandler(this, this->m_server);
 
     Spotify.Init(m_server);
 }

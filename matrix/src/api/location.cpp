@@ -7,6 +7,9 @@ void LocationApi::Parse(ArduinoJson::DynamicJsonDocument& json) //todo get timez
     m_location.lng = json["longitude"].as<float>();
     m_location.timeoffset = json["timezone"]["offset"].as<long>();
     m_location.timeabbr = json["timezone"]["abbr"].as<std::string>();
+    m_location.is_dst = json["timezone"]["is_dst"].as<bool>();
+
+    //no validation >:(
     m_hasInit = true;
 }
 
@@ -73,7 +76,7 @@ ArduinoJson::StaticJsonDocument<256> LocationApi::MakeFilter()
     auto tzf = filter["timezone"].createNestedObject();
      tzf["offset"] = true;
      tzf["abbr"] = true;
-    
+    tzf["is_dst"] = true;
 
 
      filter["latitude"] = true;
