@@ -7,6 +7,7 @@
 
 
 
+
 CSpotifyIntegration Spotify(SPOTIFY_CLIENT, SPOTIFY_SECRET);
 
 
@@ -31,12 +32,12 @@ void CSpotifyIntegration::Init(AsyncWebServer & server){
     auto& client = NetworkManager.GetClient();
 
     client.setCACert(spotify_server_cert);
-    m_hasToken = false;
+    m_hasToken = !m_refreshToken.empty();
+    
     #ifndef SPOTIFY_GETTOKEN
-     m_hasToken = true;
+   //  m_hasToken = true;
     #endif
-    if(!m_hasToken)
-    {
+   
             server.on("/spotify", HTTP_GET, [this](AsyncWebServerRequest *request) {
             char webpage[800];
             sprintf(webpage, webpageTemplate, m_clientid, m_callbackURI, m_scope);
@@ -57,27 +58,37 @@ void CSpotifyIntegration::Init(AsyncWebServer & server){
            
             if (refreshToken != NULL)
             {
-                request->send(200, "text/plain", refreshToken);
+                int err = 0;
                 this->m_init = true;
                 this->m_lastAuth.Update();
+                m_refreshToken = refreshToken;
+                const char* msg = "Wrote: %s Token: \n %s";
+               
+                net_config nc;
+                if(NetworkManager.GetConfig(nc)){
+                    nc.spot_auth = m_refreshToken;
+                    NetworkManager.WriteConfig(nc);
+                    m_spotify.setRefreshToken(m_refreshToken.c_str());
+                }
+                char buf[512];
+                snprintf(buf, 512, msg, (err) ? "BAD" : "OK",  refreshToken);
+                request->send(200, "text/plain", buf);
+
             }
             else
             {
                 request->send(404, "text/plain", "Failed to load token, check serial monitor");
             }
         });
-    }
-    else{
-        m_spotify.setRefreshToken(SPOTIFY_REFRESH);
+    if(m_hasToken){
+        m_spotify.setRefreshToken(m_refreshToken.c_str());
         m_init = true;
         this->m_lastAuth.Update();
         LOG("set spotify refresh token");
+    } else {
+        matrix.Display("No Spotify Token!");
+        LOG("No spotify token?");
     }
-     
-
-    
-
-   
 }
 
 int CSpotifyIntegration::Update()
@@ -97,6 +108,12 @@ void CSpotifyIntegration::Display(int type)
     delay(800);
     matrix.SetNextSpeed({50,1});
     matrix.printf("%s - %s ",Spotify.m_current.trackName, Spotify.m_current.artists[0].artistName);
+}
+void CSpotifyIntegration::SetToken(const std::string &tok)
+{
+    this->m_refreshToken = tok;
+    LOG("Set Token! ");
+    LOG(this->m_refreshToken.c_str());
 }
 bool CSpotifyIntegration::IsPlaying()
 {

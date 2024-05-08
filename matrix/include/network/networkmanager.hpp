@@ -6,7 +6,8 @@
 
 struct net_config{
     std::string ssid;
-    std::string pwd;
+    std::string pwd; 
+    std::string spot_auth;
 
 };
 

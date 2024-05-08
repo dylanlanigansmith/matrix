@@ -10,7 +10,7 @@
 
 #include <feature/feature.hpp>
 #include <config/ui_html.hpp>
-
+#include <api_config.hpp>
 void onOTAStart(){
     NetworkManager.SetOTAStatus(true);
 }
@@ -68,13 +68,17 @@ bool CNetworkManager::GetConfig(net_config& cfg)
 
     cfg.ssid = j["ssid"].as<std::string>();
     cfg.pwd = j["wifi_pwd"].as<std::string>();
+    cfg.spot_auth = SPOTIFY_REFRESH;  //j["spotify_auth"].as<std::string>();
+    Spotify.SetToken(cfg.spot_auth);
+
+    Serial.printf("ssid %s pwd %s spot %s", cfg.ssid.c_str(), cfg.pwd.c_str(), j["spotify_auth"].as<String>().c_str());
     if(dbg){
          matrix.SetNextSpeed({50,1});
         matrix.printf("ssid %s pwd %s", j["ssid"].as<String>().c_str(), j["wifi_pwd"].as<String>().c_str() );
     }
    
 
-
+    
     return true;
 }
 bool CNetworkManager::WriteConfig(net_config& cfg)
@@ -95,7 +99,7 @@ bool CNetworkManager::WriteConfig(net_config& cfg)
 
     j["ssid"] = cfg.ssid;
     j["wifi_pwd"] = cfg.pwd ;
-   
+    j["spotify_auth"] = cfg.spot_auth;
     
     if(ArduinoJson::serializeJson(j, cfg_file) == 0){
         if(dbg) matrix.ScrollText("json write to file failed"); cfg_file.close();

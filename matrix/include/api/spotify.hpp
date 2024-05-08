@@ -22,6 +22,8 @@ class CSpotifyIntegration
         int Update();
 
         void Display(int type = 0);
+        void SetToken(const std::string& tok);
+        std::string GetToken() const { return m_refreshToken; }
     protected:
         const char* m_clientid;
         const char* m_clientsecret;
