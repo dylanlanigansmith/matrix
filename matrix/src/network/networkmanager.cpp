@@ -52,7 +52,7 @@ bool CNetworkManager::GetConfig(net_config& cfg)
    
     ArduinoJson::StaticJsonDocument<256> j;
     auto err = ArduinoJson::deserializeJson(j, cfg_file);
-
+    
     cfg_file.close();
     if(err != ArduinoJson::DeserializationError::Ok){
         if(dbg) matrix.printf("json error %i", err);

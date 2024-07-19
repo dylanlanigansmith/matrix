@@ -47,7 +47,7 @@ class ApiRequest
         inline bool HasHeader() const { return m_header.ShouldAdd();}
         bool request();
 
-        virtual ArduinoJson::V6214PB2::DeserializationError Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data){
+        virtual ArduinoJson::V6215PB2::DeserializationError Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data){
             return ArduinoJson::deserializeJson(json, data);
         }
     protected:

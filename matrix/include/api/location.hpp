@@ -33,7 +33,7 @@ public:
     }
     virtual void Parse(ArduinoJson::DynamicJsonDocument& json) override;
     virtual void Display(int type = 0) override;
-     virtual ArduinoJson::V6214PB2::DeserializationError Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data) override;
+     virtual ArduinoJson::V6215PB2::DeserializationError Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data) override;
 
      float Latitude() const { return m_location.lat; }
      float Longitude() const { return m_location.lng; }
@@ -41,9 +41,7 @@ public:
      const location_t& Location() { return m_location; } //again should be const but idfk/c
 
     inline bool isDST(){
-        if (m_hasInit){
-            return m_location.is_dst;
-        }
+        return (m_hasInit) ? m_location.is_dst : false;
     }
 protected:
         ArduinoJson::StaticJsonDocument<256> MakeFilter();

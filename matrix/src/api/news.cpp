@@ -54,7 +54,7 @@ ArduinoJson::StaticJsonDocument<128> NewsApi::MakeFilter()
     return filter;
 }
 
-ArduinoJson::V6214PB2::DeserializationError NewsApi::Deserialize(ArduinoJson::DynamicJsonDocument &json, const std::string &data)
+ArduinoJson::V6215PB2::DeserializationError NewsApi::Deserialize(ArduinoJson::DynamicJsonDocument &json, const std::string &data)
 {
     static ArduinoJson::StaticJsonDocument<128> filter = MakeFilter();
     return ArduinoJson::deserializeJson(json, m_msg.data, ArduinoJson::DeserializationOption::Filter(filter)); //data vs 

@@ -64,12 +64,14 @@ void CSpotifyIntegration::Init(AsyncWebServer & server){
                 m_refreshToken = refreshToken;
                 const char* msg = "Wrote: %s Token: \n %s";
                
-                net_config nc;
-                if(NetworkManager.GetConfig(nc)){
-                    nc.spot_auth = m_refreshToken;
-                    NetworkManager.WriteConfig(nc);
-                    m_spotify.setRefreshToken(m_refreshToken.c_str());
-                }
+          //      net_config nc;
+           //     if(NetworkManager.GetConfig(nc)){
+           //         nc.spot_auth = m_refreshToken;
+          ///          NetworkManager.WriteConfig(nc);
+           //         m_spotify.setRefreshToken(m_refreshToken.c_str());
+            //    }
+
+                 m_spotify.setRefreshToken(m_refreshToken.c_str());
                 char buf[512];
                 snprintf(buf, 512, msg, (err) ? "BAD" : "OK",  refreshToken);
                 request->send(200, "text/plain", buf);
@@ -81,6 +83,8 @@ void CSpotifyIntegration::Init(AsyncWebServer & server){
             }
         });
     if(m_hasToken){
+        LOG("we have a refresh token");
+        LOGF("cID=%s cS=%s ", m_clientid, m_clientsecret);
         m_spotify.setRefreshToken(m_refreshToken.c_str());
         m_init = true;
         this->m_lastAuth.Update();

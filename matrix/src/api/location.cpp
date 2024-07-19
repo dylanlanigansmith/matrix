@@ -19,7 +19,7 @@ void LocationApi::Display(int type)
    // matrix.printf("%s %.3f/%.3f %s", m_location.city.c_str(), m_location.lat, m_location.lng, m_location.timeabbr.c_str());
 }
 
-ArduinoJson::V6214PB2::DeserializationError LocationApi::Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data)
+ArduinoJson::V6215PB2::DeserializationError LocationApi::Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data)
 {
       static ArduinoJson::StaticJsonDocument<128> filter = MakeFilter();
       LOG(data.c_str());

@@ -28,7 +28,7 @@ public:
 
     virtual void Parse(ArduinoJson::DynamicJsonDocument& json) override;
     virtual void Display(int type = 0) override;
-    virtual ArduinoJson::V6214PB2::DeserializationError Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data) override;
+    virtual ArduinoJson::V6215PB2::DeserializationError Deserialize(ArduinoJson::DynamicJsonDocument& json, const std::string& data) override;
 
     std::vector<headline_t>& headlines() { return m_headlines; }
 protected:

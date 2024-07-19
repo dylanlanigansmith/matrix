@@ -30,6 +30,8 @@ void CFeatureManager::OnLoop()
     -update funcs /  intervals should be moved Async
     -tbh this would be a good excuse to learn RTOS
     
+    2024.7.19: rewrite this shit it sucks ass
+
     */
     switch(m_state)
     {
@@ -110,7 +112,7 @@ void CFeatureManager::NowPlaying()
    auto prog = GetSongTime(pms);
    auto dur = GetSongTime(Spotify.m_current.durationMs);
    if(pms >= Spotify.m_current.durationMs){
-        Spotify.Update(); return;
+        Spotify.Update(); return; //sus
    } 
 
    static CTime nextSwap = CTime() + CTime(time_sec_t(5));
@@ -166,6 +168,7 @@ void CFeatureManager::Init()
     m_intervals.emplace("UpdateSpotify", CInterval(CTime(time_sec_t(15)), 
         [this](){
             LOG("UpdateSpotify");
+            
             if(!Spotify.HasAuth()) return;
             long prevDur = Spotify.m_current.durationMs;
             Spotify.Update();
